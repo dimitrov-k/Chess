@@ -47,7 +47,7 @@ void printMessage(void)
    next_message = "";
 }
 
-void printLine(int iLine, int iColor1, int iColor2, Game& game)
+void printLine(int line, int color1, int color2, Game& game)
 {
    // Example (for CELL = 6):
 
@@ -69,7 +69,7 @@ void printLine(int iLine, int iColor1, int iColor2, Game& game)
    {
       // A sub-line is consisted of 8 cells, but we can group it
       // in 4 iPairs of black&white
-      for (int iPair = 0; iPair < 4; iPair++)
+      for (int pair = 0; pair < 4; pair++)
       {
          // First cell of the pair
          for (int subColumn = 0; subColumn < CELL; subColumn++)
@@ -79,11 +79,11 @@ void printLine(int iLine, int iColor1, int iColor2, Game& game)
             // For 6 sub-columns, sub-column 3
             if ( subLine == 1 && subColumn == 3)
             {
-               cout << char(game.getPieceAtPosition(iLine, iPair*2) != 0x20 ? game.getPieceAtPosition(iLine, iPair*2) : iColor1);
+               cout << char(game.getPieceAtPosition(line, pair*2) != 0x20 ? game.getPieceAtPosition(line, pair*2) : color1);
             }
             else
             {
-               cout << char(iColor1);
+               cout << char(color1);
             }
          }
 
@@ -95,11 +95,11 @@ void printLine(int iLine, int iColor1, int iColor2, Game& game)
             // For 6 sub-columns, sub-column 3
             if ( subLine == 1 && subColumn == 3)
             {
-               cout << char(game.getPieceAtPosition(iLine,iPair*2+1) != 0x20 ? game.getPieceAtPosition(iLine,iPair*2+1) : iColor2);
+               cout << char(game.getPieceAtPosition(line,pair*2+1) != 0x20 ? game.getPieceAtPosition(line,pair*2+1) : color2);
             }
             else
             {
-               cout << char(iColor2);
+               cout << char(color2);
             }
          }
       }
@@ -107,7 +107,7 @@ void printLine(int iLine, int iColor1, int iColor2, Game& game)
       // Write the number of the line on the right
       if ( 1 == subLine )
       {
-         cout << "   " << iLine+1;
+         cout << "   " << line+1;
       }
 
       cout << "\n";
@@ -122,21 +122,21 @@ void printSituation(Game& game)
    {
       cout << "Last moves:\n";
 
-      int iMoves = game.rounds.size();
-      int iToShow = iMoves >= 5 ? 5 : iMoves;
+      int moves = game.rounds.size();
+      int toShow = moves >= 5 ? 5 : moves;
 
       string space = "";
 
-      while( iToShow-- )
+      while( toShow-- )
       {
-         if ( iMoves < 10 )
+         if ( moves < 10 )
          {
             // Add an extra hardspace to allign the numbers that are smaller than 10
             space = " ";
          }
 
-         cout << space << iMoves << " ..... " <<  game.rounds[iMoves-1].white_move.c_str() << " | " << game.rounds[iMoves - 1].black_move.c_str() << "\n";
-         iMoves--;
+         cout << space << moves << " ..... " <<  game.rounds[moves-1].white_move.c_str() << " | " << game.rounds[moves - 1].black_move.c_str() << "\n";
+         moves--;
       }
 
       cout << "\n";
@@ -172,18 +172,18 @@ void printBoard(Game& game)
 {
    cout << "   A     B     C     D     E     F     G     H\n\n";
 
-   for (int iLine = 7; iLine >= 0; iLine--)
+   for (int line = 7; line >= 0; line--)
    {
-      if ( iLine%2 == 0)
+      if ( line%2 == 0)
       {
          // Line starting with BLACK
-         printLine(iLine, BLACK_SQUARE, WHITE_SQUARE, game);
+         printLine(line, BLACK_SQUARE, WHITE_SQUARE, game);
       }
 
       else
       {
          // Line starting with WHITE
-         printLine(iLine, WHITE_SQUARE, BLACK_SQUARE, game);
+         printLine(line, WHITE_SQUARE, BLACK_SQUARE, game);
       }
    }
 }
