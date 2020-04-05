@@ -12,6 +12,6 @@ void printLogo( void );
 void printLogo( void );
 void printMenu( void );
 void printMessage( void );
-void printLine( int iLine, int iColor1, int iColor2, Game& game );
+void printLine( int line, int color1, int color2, Game& game );
 void printSituation( Game& game );
 void printBoard(Game& game);
