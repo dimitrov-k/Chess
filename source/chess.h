@@ -4,13 +4,13 @@
 class Chess
 {
 public:
-   static int getPieceColor( char chPiece );
+   static int getPieceColor( char piece );
 
-   static bool isWhitePiece( char chPiece );
+   static bool isWhitePiece( char piece );
 
-   static bool isBlackPiece( char chPiece );
+   static bool isBlackPiece( char piece );
 
-   static std::string describePiece( char chPiece );
+   static std::string describePiece( char piece );
 
    enum PieceColor
    {
@@ -40,48 +40,48 @@ public:
 
    struct Position
    {
-      int iRow;
-      int iColumn;
+      int row;
+      int column;
    };
 
    struct EnPassant
    {
-      bool bApplied;
+      bool applied;
       Position PawnCaptured;
    };
 
    struct Castling
    {
-      bool bApplied;
-      Position rook_before;
-      Position rook_after;
+      bool applied;
+      Position rookBefore;
+      Position rookAfter;
    };
 
    struct Promotion
    {
-      bool bApplied;
-      //Position  pos;
-      char chBefore;
-      char chAfter;
+      bool applied;
+      //Position  position;
+      char before;
+      char after;
    };
 
    struct IntendedMove
    {
-      char chPiece;
+      char piece;
       Position from;
       Position to;
    };
 
    struct Attacker
    {
-      Position  pos;
-      Direction dir;
+      Position  position;
+      Direction direction;
    };
 
    struct UnderAttack
    {
-      bool bUnderAttack;
-      int iNumAttackers;
+      bool underAttack;
+      int numAttackers;
       Attacker attacker[9]; //maximum theorical number of attackers
    };
 
@@ -112,35 +112,35 @@ public:
 
    void undoLastMove();
 
-   bool undoIsPossible();
+   bool isUndoPossible();
 
-   bool castlingAllowed( Side iSide, int iColor );
+   bool isCastlingAllowed( Side side, int color );
 
-   char getPieceAtPosition( int iRow, int iColumn );
+   char getPieceAtPosition( int row, int column );
 
-   char getPieceAtPosition( Position pos );
+   char getPieceAtPosition( Position position );
 
-   char getPiece_considerMove( int iRow, int iColumn, IntendedMove* intended_move = nullptr );
+   char considerMove( int row, int column, IntendedMove* intendedMove = nullptr );
 
-   UnderAttack isUnderAttack( int iRow, int iColumn, int iColor, IntendedMove* pintended_move = nullptr );
+   UnderAttack underAttack( int row, int column, int color, IntendedMove* intendedMove = nullptr );
 
-   bool isReachable( int iRow, int iColumn, int iColor );
+   bool isReachable( int row, int column, int color );
 
-   bool isSquareOccupied( int iRow, int iColumn );
+   bool isSquareOccupied( int row, int column );
 
-   bool isPathFree( Position startingPos, Position finishingPos, int iDirection ); 
+   bool isPathFree( Position starting, Position finishing, int direction ); 
 
-   bool canBeBlocked( Position startingPos, Position finishinPos, int iDirection );
+   bool canBeBlocked( Position starting, Position finishing, int direction );
 
    bool isCheckMate();
 
-   bool isKingInCheck( int iColor, IntendedMove* intended_move = nullptr );
+   bool isKingInCheck( int color, IntendedMove* intendedMove = nullptr );
 
-   bool playerKingInCheck( IntendedMove* intended_move = nullptr );
+   bool isPlayerKingInCheck( IntendedMove* intendedMove = nullptr );
 
-   bool wouldKingBeInCheck( char chPiece, Position present, Position future, EnPassant* S_enPassant );
+   bool wouldKingBeInCheck( char piece, Position present, Position future, EnPassant* S_enPassant );
 
-   Position findKing( int iColor );
+   Position findKing( int color );
 
    void changeTurns( void );
 
@@ -150,9 +150,9 @@ public:
 
    int getOpponentColor( void );
 
-   void parseMove( string move, Position* pFrom, Position* pTo, char* chPromoted = nullptr );
+   void parseMove( string move, Position* from, Position* to, char* promoted = nullptr );
 
-   void logMove( std::string &to_record );
+   void logMove( std::string &record );
 
    string getLastMove( void );
 
@@ -161,16 +161,16 @@ public:
    // Save all the moves
    struct Round
    {
-      string white_move;
-      string black_move;
+      string whiteMove;
+      string blackMove;
    };
 
    //std::deque<std::string> moves;
    std::deque<Round> rounds;
 
    // Save the captured pieces
-   std::vector<char> white_captured;
-   std::vector<char> black_captured;
+   std::vector<char> whiteCaptured;
+   std::vector<char> blackCaptured;
 
 private:
 
@@ -180,24 +180,24 @@ private:
    // Undo is possible?
    struct Undo
    {
-      bool bCanUndo;
-      bool bCapturedLastMove;
+      bool undo;
+      bool lastMoveCaptured;
 
-      bool bCastlingKingSideAllowed;
-      bool bCastlingQueenSideAllowed;
+      bool allowedCastlingKingSide;
+      bool allowedCastlingQueenSide;
 
-      EnPassant en_passant;
+      EnPassant enPassant;
       Castling  castling;
       Promotion promotion;
    } m_undo;
 
    // Castling requirements
-   bool m_bCastlingKingSideAllowed[2];
-   bool m_bCastlingQueenSideAllowed[2];
+   bool castlingKingSideAllowed[2];
+   bool castlingQueenSideAllowed[2];
 
    // Holds the current turn
-   int  m_CurrentTurn;
+   int  currentTurn;
 
    // Has the game finished already?
-   bool m_bGameFinished;
+   bool gameFinished;
 };
