@@ -63,6 +63,8 @@ public:
 
 	void deleteLastMove(void);
 
+	void initCastlingTrue(void);
+
 	// Save all the moves
 	struct Round
 	{
@@ -94,6 +96,9 @@ private:
 		EnPassant enPassant;
 		Castling  castling;
 		Promotion promotion;
+
+		void initFalse(void);
+
 	} undoMove;
 
 	// Castling requirements
