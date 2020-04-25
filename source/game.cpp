@@ -12,22 +12,13 @@ Game::Game()
 	gameFinished = false;
 
 	// Nothing has happend yet
-	undoMove.lastMoveCaptured = false;
-	undoMove.undo = false;
-	undoMove.allowedCastlingKingSide = false;
-	undoMove.allowedCastlingQueenSide = false;
-	undoMove.enPassant.applied = false;
-	undoMove.castling.applied = false;
+	undoMove.initFalse();
 
 	// Initial board settings
 	memcpy(board, initial_board, sizeof(char) * 8 * 8);
 
 	// Castling is allowed (to each side) until the player moves the king or the rook
-	castlingKingSideAllowed[WHITE_PLAYER] = true;
-	castlingKingSideAllowed[BLACK_PLAYER] = true;
-
-	castlingQueenSideAllowed[WHITE_PLAYER] = true;
-	castlingQueenSideAllowed[BLACK_PLAYER] = true;
+	initCastlingTrue();
 }
 
 Game::~Game()
@@ -1668,4 +1659,21 @@ void Game::deleteLastMove(void)
 		rounds.pop_back();
 		rounds.push_back(round);
 	}
+}
+
+void Game::initCastlingTrue(void) {
+	castlingKingSideAllowed[WHITE_PLAYER] = true;
+	castlingKingSideAllowed[BLACK_PLAYER] = true;
+
+	castlingQueenSideAllowed[WHITE_PLAYER] = true;
+	castlingQueenSideAllowed[BLACK_PLAYER] = true;
+}
+
+void Game::Undo::initFalse(void) {
+	this->undo = false;
+	this->lastMoveCaptured = false;
+	this->allowedCastlingKingSide = false;
+	this->allowedCastlingQueenSide = false;
+	this->enPassant.applied = false;
+	this->castling.applied = false;
 }
