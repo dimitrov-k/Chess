@@ -9,6 +9,312 @@ Game* currentGame = NULL;
 
 // Helper
 // Auxiliar functions to determine if a move is valid, etc
+bool isPawnMovementValid(Chess::Position present, Chess::Position future, Chess::EnPassant* S_enPassant, Chess::Promotion* S_promotion) {
+	bool valid = false;
+	char piece = currentGame->getPieceAtPosition(present.row, present.column);
+	// Wants to move forward
+	if (future.column == present.column)
+	{
+		// Simple move forward
+		if ((Chess::isWhitePiece(piece) && future.row == present.row + 1) ||
+			(Chess::isBlackPiece(piece) && future.row == present.row - 1))
+		{
+			if (EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row, future.column))
+			{
+				valid = true;
+			}
+		}
+
+		// Double move forward
+		else if ((Chess::isWhitePiece(piece) && future.row == present.row + 2) ||
+			(Chess::isBlackPiece(piece) && future.row == present.row - 2))
+		{
+			// This is only allowed if the pawn is in its original place
+			if (Chess::isWhitePiece(piece))
+			{
+				if (EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row - 1, future.column) &&
+					EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row, future.column) &&
+					1 == present.row)
+				{
+					valid = true;
+				}
+			}
+			else // if ( isBlackPiece(piece) )
+			{
+				if (EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row + 1, future.column) &&
+					EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row, future.column) &&
+					6 == present.row)
+				{
+					valid = true;
+				}
+			}
+		}
+		else
+		{
+			// This is invalid
+			return false;
+		}
+	}
+
+	// The "en passant" move
+	else if ((Chess::isWhitePiece(piece) && 4 == present.row && 5 == future.row && 1 == abs(future.column - present.column)) ||
+		(Chess::isBlackPiece(piece) && 3 == present.row && 2 == future.row && 1 == abs(future.column - present.column)))
+	{
+		// It is only valid if last move of the opponent was a double move forward by a pawn on a adjacent column
+		string last_move = currentGame->getLastMove();
+
+		// Parse the line
+		Chess::Position LastMoveFrom;
+		Chess::Position LastMoveTo;
+		currentGame->parseMove(last_move, &LastMoveFrom, &LastMoveTo);
+
+		// First of all, was it a pawn?
+		char chLstMvPiece = currentGame->getPieceAtPosition(LastMoveTo.row, LastMoveTo.column);
+
+		if (toupper(chLstMvPiece) != 'P')
+		{
+			return false;
+		}
+
+		// Did the pawn have a double move forward and was it an adjacent column?
+		if (2 == abs(LastMoveTo.row - LastMoveFrom.row) && 1 == abs(LastMoveFrom.column - present.column))
+		{
+			cout << "En passant move!\n";
+			valid = true;
+
+			S_enPassant->applied = true;
+			S_enPassant->PawnCaptured.row = LastMoveTo.row;
+			S_enPassant->PawnCaptured.column = LastMoveTo.column;
+		}
+	}
+
+	// Wants to capture a piece
+	else if (1 == abs(future.column - present.column))
+	{
+		if ((Chess::isWhitePiece(piece) && future.row == present.row + 1) || (Chess::isBlackPiece(piece) && future.row == present.row - 1))
+		{
+			// Only allowed if there is something to be captured in the square
+			if (EMPTY_SQUARE != currentGame->getPieceAtPosition(future.row, future.column))
+			{
+				valid = true;
+				cout << "Pawn captured a piece!\n";
+			}
+		}
+	}
+	else
+	{
+		// This is invalid
+		return false;
+	}
+
+	// If a pawn reaches its eight rank, it must be promoted to another piece
+	if ((Chess::isWhitePiece(piece) && 7 == future.row) ||
+		(Chess::isBlackPiece(piece) && 0 == future.row))
+	{
+		cout << "Pawn must be promoted!\n";
+		S_promotion->applied = true;
+	}
+	return valid;
+}
+
+bool isRookMovementValid(Chess::Position present, Chess::Position future) {
+	bool valid = false;
+	// Horizontal move
+	if ((future.row == present.row) && (future.column != present.column))
+	{
+		// Check if there are no pieces on the way
+		if (currentGame->isPathFree(present, future, Chess::HORIZONTAL))
+		{
+			valid = true;
+		}
+	}
+	// Vertical move
+	else if ((future.row != present.row) && (future.column == present.column))
+	{
+		// Check if there are no pieces on the way
+		if (currentGame->isPathFree(present, future, Chess::VERTICAL))
+		{
+			valid = true;
+		}
+	}
+	return valid;
+}
+
+bool isKnightMovementValid(Chess::Position present, Chess::Position future) {
+	bool valid = false;
+	if ((2 == abs(future.row - present.row)) && (1 == abs(future.column - present.column)))
+	{
+		valid = true;
+	}
+
+	else if ((1 == abs(future.row - present.row)) && (2 == abs(future.column - present.column)))
+	{
+		valid = true;
+	}
+	return valid;
+}
+
+bool isBishopMovementValid(Chess::Position present, Chess::Position future) {
+	bool valid = false;
+	// Diagonal move
+	if (abs(future.row - present.row) == abs(future.column - present.column))
+	{
+		// Check if there are no pieces on the way
+		if (currentGame->isPathFree(present, future, Chess::DIAGONAL))
+		{
+			valid = true;
+		}
+	}
+	return valid;
+}
+
+bool isQueenMovementValid(Chess::Position present, Chess::Position future) {
+	bool valid = false;
+	// Horizontal move
+	if ((future.row == present.row) && (future.column != present.column))
+	{
+		// Check if there are no pieces on the way
+		if (currentGame->isPathFree(present, future, Chess::HORIZONTAL))
+		{
+			valid = true;
+		}
+	}
+	// Vertical move
+	else if ((future.row != present.row) && (future.column == present.column))
+	{
+		// Check if there are no pieces on the way
+		if (currentGame->isPathFree(present, future, Chess::VERTICAL))
+		{
+			valid = true;
+		}
+	}
+
+	// Diagonal move
+	else if (abs(future.row - present.row) == abs(future.column - present.column))
+	{
+		// Check if there are no pieces on the way
+		if (currentGame->isPathFree(present, future, Chess::DIAGONAL))
+		{
+			valid = true;
+		}
+	}
+	return valid;
+}
+
+bool isKingMovementValid(Chess::Position present, Chess::Position future, Chess::Castling* S_castling) {
+	bool valid = false;
+	char piece = currentGame->getPieceAtPosition(present.row, present.column);
+	// Horizontal move by 1
+	if ((future.row == present.row) && (1 == abs(future.column - present.column)))
+	{
+		valid = true;
+	}
+
+	// Vertical move by 1
+	else if ((future.column == present.column) && (1 == abs(future.row - present.row)))
+	{
+		valid = true;
+	}
+
+	// Diagonal move by 1
+	else if ((1 == abs(future.row - present.row)) && (1 == abs(future.column - present.column)))
+	{
+		valid = true;
+	}
+
+	// Castling
+	else if ((future.row == present.row) && (2 == abs(future.column - present.column)))
+	{
+		// Castling is only allowed in these circunstances:
+
+		// 1. King is not in check
+		if (true == currentGame->isPlayerKingInCheck())
+		{
+			return false;
+		}
+
+		// 2. No pieces in between the king and the rook
+		if (false == currentGame->isPathFree(present, future, Chess::HORIZONTAL))
+		{
+			return false;
+		}
+
+		// 3. King and rook must not have moved yet;
+		// 4. King must not pass through a square that is attacked by an enemy piece
+		if (future.column > present.column)
+		{
+			// if future.column is greather, it means king side
+			if (false == currentGame->isCastlingAllowed(Chess::Side::KING_SIDE, Chess::getPieceColor(piece)))
+			{
+				createNextMessage("Castling to the king side is not allowed.\n");
+				return false;
+			}
+			else
+			{
+				// Check if the square that the king skips is not under attack
+				Chess::UnderAttack square_skipped = currentGame->underAttack(present.row, present.column + 1, currentGame->getCurrentTurn());
+				if (false == square_skipped.underAttack)
+				{
+					// Fill the S_castling structure
+					S_castling->applied = true;
+
+					// Present position of the rook
+					S_castling->rookBefore.row = present.row;
+					S_castling->rookBefore.column = present.column + 3;
+
+					// Future position of the rook
+					S_castling->rookAfter.row = future.row;
+					S_castling->rookAfter.column = present.column + 1; // future.column -1
+
+					valid = true;
+				}
+			}
+		}
+		else //if (future.column < present.column)
+		{
+			// if present.column is greather, it means queen side
+			if (false == currentGame->isCastlingAllowed(Chess::Side::QUEEN_SIDE, Chess::getPieceColor(piece)))
+			{
+				createNextMessage("Castling to the queen side is not allowed.\n");
+				return false;
+			}
+			else
+			{
+				// Check if the square that the king skips is not attacked
+				Chess::UnderAttack square_skipped = currentGame->underAttack(present.row, present.column - 1, currentGame->getCurrentTurn());
+				if (false == square_skipped.underAttack)
+				{
+					// Fill the S_castling structure
+					S_castling->applied = true;
+
+					// Present position of the rook
+					S_castling->rookBefore.row = present.row;
+					S_castling->rookBefore.column = present.column - 4;
+
+					// Future position of the rook
+					S_castling->rookAfter.row = future.row;
+					S_castling->rookAfter.column = present.column - 1; // future.column +1
+
+					valid = true;
+				}
+			}
+		}
+	}
+	return valid;
+}
+
+bool isPieceColourValid(Chess::Position present, Chess::Position future) {
+	char piece = currentGame->getPieceAtPosition(present.row, present.column);
+	if (currentGame->isSquareOccupied(future.row, future.column)) {
+		char chAuxPiece = currentGame->getPieceAtPosition(future.row, future.column);
+		if (Chess::getPieceColor(piece) == Chess::getPieceColor(chAuxPiece)) {
+			cout << "Position is already taken by a piece of the same color\n";
+			return false;
+		}
+	}
+	return true;
+}
+
 bool isMoveValid(Chess::Position present, Chess::Position future, Chess::EnPassant* S_enPassant, Chess::Castling* S_castling, Chess::Promotion* S_promotion)
 {
 	bool valid = false;
@@ -18,307 +324,45 @@ bool isMoveValid(Chess::Position present, Chess::Position future, Chess::EnPassa
 	// 1. Is the piece  allowed to move in that direction?
 	switch (toupper(piece))
 	{
-	case Chess::PIECE_TYPE_PAWN:
-	{
-		// Wants to move forward
-		if (future.column == present.column)
-		{
-			// Simple move forward
-			if ((Chess::isWhitePiece(piece) && future.row == present.row + 1) ||
-				(Chess::isBlackPiece(piece) && future.row == present.row - 1))
-			{
-				if (EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row, future.column))
-				{
-					valid = true;
-				}
-			}
-
-			// Double move forward
-			else if ((Chess::isWhitePiece(piece) && future.row == present.row + 2) ||
-				(Chess::isBlackPiece(piece) && future.row == present.row - 2))
-			{
-				// This is only allowed if the pawn is in its original place
-				if (Chess::isWhitePiece(piece))
-				{
-					if (EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row - 1, future.column) &&
-						EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row, future.column) &&
-						1 == present.row)
-					{
-						valid = true;
-					}
-				}
-				else // if ( isBlackPiece(piece) )
-				{
-					if (EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row + 1, future.column) &&
-						EMPTY_SQUARE == currentGame->getPieceAtPosition(future.row, future.column) &&
-						6 == present.row)
-					{
-						valid = true;
-					}
-				}
-			}
-			else
-			{
-				// This is invalid
-				return false;
-			}
-		}
-
-		// The "en passant" move
-		else if ((Chess::isWhitePiece(piece) && 4 == present.row && 5 == future.row && 1 == abs(future.column - present.column)) ||
-			(Chess::isBlackPiece(piece) && 3 == present.row && 2 == future.row && 1 == abs(future.column - present.column)))
-		{
-			// It is only valid if last move of the opponent was a double move forward by a pawn on a adjacent column
-			string last_move = currentGame->getLastMove();
-
-			// Parse the line
-			Chess::Position LastMoveFrom;
-			Chess::Position LastMoveTo;
-			currentGame->parseMove(last_move, &LastMoveFrom, &LastMoveTo);
-
-			// First of all, was it a pawn?
-			char chLstMvPiece = currentGame->getPieceAtPosition(LastMoveTo.row, LastMoveTo.column);
-
-			if (toupper(chLstMvPiece) != 'P')
-			{
-				return false;
-			}
-
-			// Did the pawn have a double move forward and was it an adjacent column?
-			if (2 == abs(LastMoveTo.row - LastMoveFrom.row) && 1 == abs(LastMoveFrom.column - present.column))
-			{
-				cout << "En passant move!\n";
-				valid = true;
-
-				S_enPassant->applied = true;
-				S_enPassant->PawnCaptured.row = LastMoveTo.row;
-				S_enPassant->PawnCaptured.column = LastMoveTo.column;
-			}
-		}
-
-		// Wants to capture a piece
-		else if (1 == abs(future.column - present.column))
-		{
-			if ((Chess::isWhitePiece(piece) && future.row == present.row + 1) || (Chess::isBlackPiece(piece) && future.row == present.row - 1))
-			{
-				// Only allowed if there is something to be captured in the square
-				if (EMPTY_SQUARE != currentGame->getPieceAtPosition(future.row, future.column))
-				{
-					valid = true;
-					cout << "Pawn captured a piece!\n";
-				}
-			}
-		}
-		else
-		{
-			// This is invalid
-			return false;
-		}
-
-		// If a pawn reaches its eight rank, it must be promoted to another piece
-		if ((Chess::isWhitePiece(piece) && 7 == future.row) ||
-			(Chess::isBlackPiece(piece) && 0 == future.row))
-		{
-			cout << "Pawn must be promoted!\n";
-			S_promotion->applied = true;
-		}
+	case Chess::PIECE_TYPE_PAWN: {
+		valid = isPawnMovementValid(present, future, S_enPassant, S_promotion);
+		break;
 	}
-	break;
 
-	case Chess::PIECE_TYPE_ROOK:
-	{
-		// Horizontal move
-		if ((future.row == present.row) && (future.column != present.column))
-		{
-			// Check if there are no pieces on the way
-			if (currentGame->isPathFree(present, future, Chess::HORIZONTAL))
-			{
-				valid = true;
-			}
-		}
-		// Vertical move
-		else if ((future.row != present.row) && (future.column == present.column))
-		{
-			// Check if there are no pieces on the way
-			if (currentGame->isPathFree(present, future, Chess::VERTICAL))
-			{
-				valid = true;
-			}
-		}
+	case Chess::PIECE_TYPE_ROOK: {
+		valid = isRookMovementValid(present, future);
+		break;
 	}
-	break;
 
-	case Chess::PIECE_TYPE_KNIGHT:
-	{
-		if ((2 == abs(future.row - present.row)) && (1 == abs(future.column - present.column)))
-		{
-			valid = true;
-		}
-
-		else if ((1 == abs(future.row - present.row)) && (2 == abs(future.column - present.column)))
-		{
-			valid = true;
-		}
+	case Chess::PIECE_TYPE_KNIGHT: {
+		valid = isKnightMovementValid(present, future);
+		break;
 	}
-	break;
 
-	case Chess::PIECE_TYPE_BISHOP:
-	{
-		// Diagonal move
-		if (abs(future.row - present.row) == abs(future.column - present.column))
-		{
-			// Check if there are no pieces on the way
-			if (currentGame->isPathFree(present, future, Chess::DIAGONAL))
-			{
-				valid = true;
-			}
-		}
+
+	case Chess::PIECE_TYPE_BISHOP: {
+		valid = isBishopMovementValid(present, future);
+		break;
 	}
-	break;
 
-	case Chess::PIECE_TYPE_QUEEN:
-	{
-		// Horizontal move
-		if ((future.row == present.row) && (future.column != present.column))
-		{
-			// Check if there are no pieces on the way
-			if (currentGame->isPathFree(present, future, Chess::HORIZONTAL))
-			{
-				valid = true;
-			}
-		}
-		// Vertical move
-		else if ((future.row != present.row) && (future.column == present.column))
-		{
-			// Check if there are no pieces on the way
-			if (currentGame->isPathFree(present, future, Chess::VERTICAL))
-			{
-				valid = true;
-			}
-		}
-
-		// Diagonal move
-		else if (abs(future.row - present.row) == abs(future.column - present.column))
-		{
-			// Check if there are no pieces on the way
-			if (currentGame->isPathFree(present, future, Chess::DIAGONAL))
-			{
-				valid = true;
-			}
-		}
+	case Chess::PIECE_TYPE_QUEEN: {
+		valid = isQueenMovementValid(present, future);
+		break;
 	}
-	break;
 
-	case Chess::PIECE_TYPE_KING:
-	{
-		// Horizontal move by 1
-		if ((future.row == present.row) && (1 == abs(future.column - present.column)))
-		{
-			valid = true;
-		}
-
-		// Vertical move by 1
-		else if ((future.column == present.column) && (1 == abs(future.row - present.row)))
-		{
-			valid = true;
-		}
-
-		// Diagonal move by 1
-		else if ((1 == abs(future.row - present.row)) && (1 == abs(future.column - present.column)))
-		{
-			valid = true;
-		}
-
-		// Castling
-		else if ((future.row == present.row) && (2 == abs(future.column - present.column)))
-		{
-			// Castling is only allowed in these circunstances:
-
-			// 1. King is not in check
-			if (true == currentGame->isPlayerKingInCheck())
-			{
-				return false;
-			}
-
-			// 2. No pieces in between the king and the rook
-			if (false == currentGame->isPathFree(present, future, Chess::HORIZONTAL))
-			{
-				return false;
-			}
-
-			// 3. King and rook must not have moved yet;
-			// 4. King must not pass through a square that is attacked by an enemy piece
-			if (future.column > present.column)
-			{
-				// if future.column is greather, it means king side
-				if (false == currentGame->isCastlingAllowed(Chess::Side::KING_SIDE, Chess::getPieceColor(piece)))
-				{
-					createNextMessage("Castling to the king side is not allowed.\n");
-					return false;
-				}
-				else
-				{
-					// Check if the square that the king skips is not under attack
-					Chess::UnderAttack square_skipped = currentGame->underAttack(present.row, present.column + 1, currentGame->getCurrentTurn());
-					if (false == square_skipped.underAttack)
-					{
-						// Fill the S_castling structure
-						S_castling->applied = true;
-
-						// Present position of the rook
-						S_castling->rookBefore.row = present.row;
-						S_castling->rookBefore.column = present.column + 3;
-
-						// Future position of the rook
-						S_castling->rookAfter.row = future.row;
-						S_castling->rookAfter.column = present.column + 1; // future.column -1
-
-						valid = true;
-					}
-				}
-			}
-			else //if (future.column < present.column)
-			{
-				// if present.column is greather, it means queen side
-				if (false == currentGame->isCastlingAllowed(Chess::Side::QUEEN_SIDE, Chess::getPieceColor(piece)))
-				{
-					createNextMessage("Castling to the queen side is not allowed.\n");
-					return false;
-				}
-				else
-				{
-					// Check if the square that the king skips is not attacked
-					Chess::UnderAttack square_skipped = currentGame->underAttack(present.row, present.column - 1, currentGame->getCurrentTurn());
-					if (false == square_skipped.underAttack)
-					{
-						// Fill the S_castling structure
-						S_castling->applied = true;
-
-						// Present position of the rook
-						S_castling->rookBefore.row = present.row;
-						S_castling->rookBefore.column = present.column - 4;
-
-						// Future position of the rook
-						S_castling->rookAfter.row = future.row;
-						S_castling->rookAfter.column = present.column - 1; // future.column +1
-
-						valid = true;
-					}
-				}
-			}
-		}
+	case Chess::PIECE_TYPE_KING: {
+		valid = isKingMovementValid(present, future, S_castling);
+		break;
 	}
-	break;
 
-	default:
-	{
+	default: {
 		cout << "!!!!Should not reach here. Invalid piece: " << char(piece) << "\n\n\n";
+		break;
 	}
-	break;
 	}
 
 	// If it is a move in an invalid direction, do not even bother to check the rest
-	if (false == valid)
+	if (!valid)
 	{
 		cout << "Piece is not allowed to move to that square\n";
 		return false;
@@ -328,23 +372,14 @@ bool isMoveValid(Chess::Position present, Chess::Position future, Chess::EnPassa
 	// -------------------------------------------------------------------------
 	// 2. Is there another piece of the same color on the destination square?
 	// -------------------------------------------------------------------------
-	if (currentGame->isSquareOccupied(future.row, future.column))
-	{
-		char chAuxPiece = currentGame->getPieceAtPosition(future.row, future.column);
-		if (Chess::getPieceColor(piece) == Chess::getPieceColor(chAuxPiece))
-		{
-			cout << "Position is already taken by a piece of the same color\n";
-			return false;
-		}
-	}
+	valid = isPieceColourValid(present, future);
 
 	// ----------------------------------------------
 	// 3. Would the king be in check after the move?
 	// ----------------------------------------------
-	if (true == currentGame->wouldKingBeInCheck(piece, present, future, S_enPassant))
-	{
+	if (valid && currentGame->wouldKingBeInCheck(piece, present, future, S_enPassant)) {
 		cout << "Move would put player's king in check\n";
-		return false;
+		valid = false;
 	}
 
 	return valid;
@@ -558,7 +593,7 @@ void movePiece(void)
 	// Promotion: user most choose a piece to
 	// replace the pawn
 	// ---------------------------------------------------
-	if (S_promotion.applied == true)
+	if (S_promotion.applied)
 	{
 		cout << "Promote to (Q, R, N, B): ";
 		std::string piece;
