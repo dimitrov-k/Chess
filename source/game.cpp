@@ -28,13 +28,13 @@ Game::~Game()
 	rounds.clear();
 }
 
-void Game::movePiece(Position present, Position future, Chess::EnPassant* S_enPassant, Chess::Castling* S_castling, Chess::Promotion* S_promotion)
+void Game::movePiece(Move* currentMove)
 {
 	// Get the piece to be moved
-	char piece = getPieceAtPosition(present);
+	char piece = getPieceAtPosition(currentMove->getPresent());
 
 	// Is the destination square occupied?
-	char chCapturedPiece = getPieceAtPosition(future);
+	char chCapturedPiece = getPieceAtPosition(currentMove->getFuture());
 
 	// So, was a piece captured in this move?
 	if (0x20 != chCapturedPiece)
@@ -56,9 +56,9 @@ void Game::movePiece(Position present, Position future, Chess::EnPassant* S_enPa
 		// Reset undoMove.castling
 		memset(&undoMove.enPassant, 0, sizeof(Chess::EnPassant));
 	}
-	else if (true == S_enPassant->applied)
+	else if (true == currentMove->getEnPassant()->applied)
 	{
-		char chCapturedEP = getPieceAtPosition(S_enPassant->PawnCaptured.row, S_enPassant->PawnCaptured.column);
+		char chCapturedEP = getPieceAtPosition(currentMove->getEnPassant()->PawnCaptured.row, currentMove->getEnPassant()->PawnCaptured.column);
 
 		if (WHITE_PIECE == getPieceColor(chCapturedEP))
 		{
@@ -72,11 +72,11 @@ void Game::movePiece(Position present, Position future, Chess::EnPassant* S_enPa
 		}
 
 		// Now, remove the captured pawn
-		board[S_enPassant->PawnCaptured.row][S_enPassant->PawnCaptured.column] = EMPTY_SQUARE;
+		board[currentMove->getEnPassant()->PawnCaptured.row][currentMove->getEnPassant()->PawnCaptured.column] = EMPTY_SQUARE;
 
 		// Set Undo structure as piece was captured and "en passant" move was performed
 		undoMove.lastMoveCaptured = true;
-		memcpy(&undoMove.enPassant, S_enPassant, sizeof(Chess::EnPassant));
+		memcpy(&undoMove.enPassant, currentMove->getEnPassant(), sizeof(Chess::EnPassant));
 	}
 	else
 	{
@@ -86,39 +86,39 @@ void Game::movePiece(Position present, Position future, Chess::EnPassant* S_enPa
 		memset(&undoMove.enPassant, 0, sizeof(Chess::EnPassant));
 	}
 
-	// Remove piece from present position
-	board[present.row][present.column] = EMPTY_SQUARE;
+	// Remove piece from currentMove->getPresent() position
+	board[currentMove->getPresent().row][currentMove->getPresent().column] = EMPTY_SQUARE;
 
 	// Move piece to new position
-	if (true == S_promotion->applied)
+	if (true == currentMove->getPromotion()->applied)
 	{
-		board[future.row][future.column] = S_promotion->after;
+		board[currentMove->getFuture().row][currentMove->getFuture().column] = currentMove->getPromotion()->after;
 
 		// Set Undo structure as a promotion occured
-		memcpy(&undoMove.promotion, S_promotion, sizeof(Chess::Promotion));
+		memcpy(&undoMove.promotion, currentMove->getPromotion(), sizeof(Chess::Promotion));
 	}
 	else
 	{
-		board[future.row][future.column] = piece;
+		board[currentMove->getFuture().row][currentMove->getFuture().column] = piece;
 
 		// Reset undoMove.promotion
 		memset(&undoMove.promotion, 0, sizeof(Chess::Promotion));
 	}
 
 	// Was it a castling move?
-	if (S_castling->applied == true)
+	if (currentMove->getCastling()->applied == true)
 	{
 		// The king was already move, but we still have to move the rook to 'jump' the king
-		char piece = getPieceAtPosition(S_castling->rookBefore.row, S_castling->rookBefore.column);
+		char piece = getPieceAtPosition(currentMove->getCastling()->rookBefore.row, currentMove->getCastling()->rookBefore.column);
 
-		// Remove the rook from present position
-		board[S_castling->rookBefore.row][S_castling->rookBefore.column] = EMPTY_SQUARE;
+		// Remove the rook from currentMove->getPresent() position
+		board[currentMove->getCastling()->rookBefore.row][currentMove->getCastling()->rookBefore.column] = EMPTY_SQUARE;
 
 		// 'Jump' into to new position
-		board[S_castling->rookAfter.row][S_castling->rookAfter.column] = piece;
+		board[currentMove->getCastling()->rookAfter.row][currentMove->getCastling()->rookAfter.column] = piece;
 
 		// Write this information to the undoMove struct
-		memcpy(&undoMove.castling, S_castling, sizeof(Chess::Castling));
+		memcpy(&undoMove.castling, currentMove->getCastling(), sizeof(Chess::Castling));
 
 		// Save the 'isCastlingAllowed' information in case the move is undone
 		undoMove.allowedCastlingKingSide = castlingKingSideAllowed[getCurrentTurn()];
@@ -140,13 +140,13 @@ void Game::movePiece(Position present, Position future, Chess::EnPassant* S_enPa
 	else if (Chess::PIECE_TYPE_ROOK == toupper(piece))
 	{
 		// If the rook moved from column 'A', no more castling allowed on the queen side
-		if (0 == present.column)
+		if (0 == currentMove->getPresent().column)
 		{
 			castlingQueenSideAllowed[getCurrentTurn()] = false;
 		}
 
 		// If the rook moved from column 'A', no more castling allowed on the queen side
-		else if (7 == present.column)
+		else if (7 == currentMove->getPresent().column)
 		{
 			castlingKingSideAllowed[getCurrentTurn()] = false;
 		}
@@ -1493,15 +1493,15 @@ bool Game::isPlayerKingInCheck(IntendedMove* intendedMove)
 	return isKingInCheck(getCurrentTurn(), intendedMove);
 }
 
-bool Game::wouldKingBeInCheck(char piece, Position present, Position future, EnPassant* S_enPassant)
+bool Game::wouldKingBeInCheck(char piece, Move* currentMove)
 {
 	IntendedMove intendedMove;
 
 	intendedMove.piece = piece;
-	intendedMove.from.row = present.row;
-	intendedMove.from.column = present.column;
-	intendedMove.to.row = future.row;
-	intendedMove.to.column = future.column;
+	intendedMove.from.row = currentMove->getPresent().row;
+	intendedMove.from.column = currentMove->getPresent().column;
+	intendedMove.to.row = currentMove->getFuture().row;
+	intendedMove.to.column = currentMove->getFuture().column;
 
 	return isPlayerKingInCheck(&intendedMove);
 }

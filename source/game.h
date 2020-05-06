@@ -1,5 +1,6 @@
 #pragma once
 #include "chess.h"
+#include "Move.h"
 class Game : private Chess
 {
 public:
@@ -13,7 +14,7 @@ public:
 	static const char MENU_OPTION_SAVE = 'S';
 	static const char MENU_OPTION_LOAD = 'L';
 
-	void movePiece(Position present, Position future, Chess::EnPassant* S_enPassant, Chess::Castling* S_castling, Chess::Promotion* S_promotion);
+	void movePiece(Move* currentMove);
 
 	void undoLastMove();
 
@@ -43,7 +44,7 @@ public:
 
 	bool isPlayerKingInCheck(IntendedMove* intendedMove = nullptr);
 
-	bool wouldKingBeInCheck(char piece, Position present, Position future, EnPassant* S_enPassant);
+	bool wouldKingBeInCheck(char piece, Move* currentMove);
 
 	Position findKing(int color);
 

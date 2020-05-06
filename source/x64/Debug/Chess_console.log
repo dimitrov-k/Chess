@@ -1,0 +1,7 @@
+﻿  chess.cpp
+  game.cpp
+  main.cpp
+  user_interface.cpp
+C:\Users\Kris\source\repos\ChessApp\source\user_interface.cpp(125,33): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
+  Chess_console.vcxproj -> C:\Users\Kris\source\repos\ChessApp\source\x64\Debug\Chess_console.exe

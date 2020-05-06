@@ -1,0 +1,2 @@
+C:\Users\Kris\source\repos\ChessApp\source\x64\Debug\Chess_console.exe
+C:\Users\Kris\source\repos\ChessApp\source\x64\Debug\Chess_console.pdb
