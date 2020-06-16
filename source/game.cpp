@@ -37,7 +37,7 @@ void Game::movePiece(Move* currentMove)
 	char chCapturedPiece = getPieceAtPosition(currentMove->getFuture());
 
 	// So, was a piece captured in this move?
-	if (0x20 != chCapturedPiece)
+	if (chCapturedPiece != EMPTY_SQUARE)
 	{
 		if (WHITE_PIECE == getPieceColor(chCapturedPiece))
 		{
@@ -257,9 +257,9 @@ bool Game::isUndoPossible()
 	return undoMove.undo;
 }
 
-bool Game::isCastlingAllowed(Side side, int color)
+bool Game::isCastlingAllowed(Chess::Side side, int color)
 {
-	if (QUEEN_SIDE == side)
+	if (side == Side::QUEEN_SIDE)
 	{
 		return castlingQueenSideAllowed[color];
 	}
@@ -474,7 +474,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				// This is a piece of the same color, so no problem
 				break;
 			}
-			else if ((toupper(chPieceFound) == 'P') &&
+			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
 				(i == row + 1) &&
 				(j == column + 1) &&
 				(color == WHITE_PIECE))
@@ -489,7 +489,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				break;
 			}
 			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == 'B'))
+				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
 			{
 				// There is a queen or a bishop in that direction, so the piece is in jeopardy
 				attack.underAttack = true;
@@ -522,7 +522,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				// This is a piece of the same color, so no problem
 				break;
 			}
-			else if ((toupper(chPieceFound) == 'P') &&
+			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
 				(i == row + 1) &&
 				(j == column - 1) &&
 				(color == WHITE_PIECE))
@@ -537,7 +537,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				break;
 			}
 			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == 'B'))
+				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
 			{
 				// There is a queen or a bishop in that direction, so the piece is in jeopardy
 				attack.underAttack = true;
@@ -570,7 +570,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				// This is a piece of the same color, so no problem
 				break;
 			}
-			else if ((toupper(chPieceFound) == 'P') &&
+			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
 				(i == row - 1) &&
 				(j == column + 1) &&
 				(color == BLACK_PIECE))
@@ -585,7 +585,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				break;
 			}
 			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == 'B'))
+				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
 			{
 				// There is a queen or a bishop in that direction, so the piece is in jeopardy
 				attack.underAttack = true;
@@ -618,7 +618,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				// This is a piece of the same color, so no problem
 				break;
 			}
-			else if ((toupper(chPieceFound) == 'P') &&
+			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
 				(i == row - 1) &&
 				(j == column - 1) &&
 				(color == BLACK_PIECE))
@@ -633,7 +633,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				break;
 			}
 			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == 'B'))
+				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
 			{
 				// There is a queen or a bishop in that direction, so the piece is in jeopardy
 				attack.underAttack = true;
@@ -681,7 +681,7 @@ Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMov
 				// This is a piece of the same color, so no problem
 				continue;
 			}
-			else if ((toupper(chPieceFound) == 'N'))
+			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_KNIGHT))
 			{
 				attack.underAttack = true;
 				attack.numAttackers += 1;
@@ -778,7 +778,7 @@ bool Game::isReachable(int row, int column, int color)
 				// This is a piece of the same color
 				break;
 			}
-			else if ((toupper(chPieceFound) == 'P') &&
+			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
 				(getPieceColor(chPieceFound) == BLACK_PIECE) &&
 				(i == row + 1))
 			{
@@ -815,7 +815,7 @@ bool Game::isReachable(int row, int column, int color)
 				// This is a piece of the same color
 				break;
 			}
-			else if ((toupper(chPieceFound) == 'P') &&
+			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
 				(getPieceColor(chPieceFound) == WHITE_PIECE) &&
 				(i == row - 1))
 			{
@@ -856,7 +856,7 @@ bool Game::isReachable(int row, int column, int color)
 				break;
 			}
 			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == 'B'))
+				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
 			{
 				// There is a queen or a bishop in that direction, so the square is reachable
 				bReachable = true;
@@ -885,7 +885,7 @@ bool Game::isReachable(int row, int column, int color)
 				break;
 			}
 			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == 'B'))
+				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
 			{
 				// There is a queen or a bishop in that direction, so the square is reachable
 				bReachable = true;
@@ -914,7 +914,7 @@ bool Game::isReachable(int row, int column, int color)
 				break;
 			}
 			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == 'B'))
+				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
 			{
 				// There is a queen or a bishop in that direction, so the square is reachable
 				bReachable = true;
@@ -1001,7 +1001,7 @@ bool Game::isSquareOccupied(int row, int column)
 {
 	bool bOccupied = false;
 
-	if (0x20 != getPieceAtPosition(row, column))
+	if (getPieceAtPosition(row, column) != EMPTY_SQUARE)
 	{
 		bOccupied = true;
 	}

@@ -36,3 +36,28 @@ Chess::Promotion* Move::getPromotion() const
 {
 	return this->promotion;
 }
+
+void Move::setPresent(Chess::Position present)
+{
+	this->present = present;
+}
+
+void Move::setFuture(Chess::Position future)
+{
+	this->future = future;
+}
+
+void Move::setEnPassant(Chess::EnPassant* enPassant)
+{
+	this->enPassant = enPassant;
+}
+
+void Move::setCastling(Chess::Castling* castling)
+{
+	this->castling = castling;
+}
+
+void Move::setPromotion(Chess::Promotion* promotion)
+{
+	this->promotion = promotion;
+}

@@ -11,21 +11,11 @@ public:
 	Chess::EnPassant* getEnPassant() const;
 	Chess::Castling* getCastling() const;
 	Chess::Promotion* getPromotion() const;
-	void setPresent(Chess::Position present) {
-		this->present = present;
-	}
-	void setFuture(Chess::Position future) {
-		this->future = future;
-	}
-	void setEnPassant(Chess::EnPassant* enPassant) {
-		this->enPassant = enPassant;
-	}
-	void setCastling(Chess::Castling* castling) {
-		this->castling = castling;
-	}
-	void setPromotion(Chess::Promotion* promotion) {
-		this->promotion = promotion;
-	}
+	void setPresent(Chess::Position present);
+	void setFuture(Chess::Position future);
+	void setEnPassant(Chess::EnPassant* enPassant);
+	void setCastling(Chess::Castling* castling); 
+	void setPromotion(Chess::Promotion* promotion); 
 
 private:
 	Chess::Position present;

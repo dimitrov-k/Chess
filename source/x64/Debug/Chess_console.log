@@ -1,4 +1,6 @@
-﻿  chess.cpp
+﻿  GameController.cpp
+  Move.cpp
+  chess.cpp
   game.cpp
   main.cpp
   user_interface.cpp

@@ -79,7 +79,7 @@ void printLine(int line, int color1, int color2, Game& game)
 				// For 6 sub-columns, sub-column 3
 				if (subLine == 1 && subColumn == 3)
 				{
-					cout << char(game.getPieceAtPosition(line, pair * 2) != 0x20 ? game.getPieceAtPosition(line, pair * 2) : color1);
+					cout << char(game.getPieceAtPosition(line, pair * 2) != EMPTY_SQUARE ? game.getPieceAtPosition(line, pair * 2) : color1);
 				}
 				else
 				{
@@ -95,7 +95,7 @@ void printLine(int line, int color1, int color2, Game& game)
 				// For 6 sub-columns, sub-column 3
 				if (subLine == 1 && subColumn == 3)
 				{
-					cout << char(game.getPieceAtPosition(line, pair * 2 + 1) != 0x20 ? game.getPieceAtPosition(line, pair * 2 + 1) : color2);
+					cout << char(game.getPieceAtPosition(line, pair * 2 + 1) != EMPTY_SQUARE ? game.getPieceAtPosition(line, pair * 2 + 1) : color2);
 				}
 				else
 				{

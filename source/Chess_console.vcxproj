@@ -155,6 +155,7 @@
   <ItemGroup>
     <ClCompile Include="chess.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="GameController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Move.cpp" />
     <ClCompile Include="user_interface.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="chess.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="GameController.h" />
     <ClInclude Include="includes.h" />
     <ClInclude Include="Move.h" />
     <ClInclude Include="resource.h" />

@@ -20,7 +20,7 @@ public:
 
 	bool isUndoPossible();
 
-	bool isCastlingAllowed(Side side, int color);
+	bool isCastlingAllowed(Chess::Side side, int color);
 
 	char getPieceAtPosition(int row, int column);
 
