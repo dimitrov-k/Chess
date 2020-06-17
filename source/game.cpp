@@ -56,7 +56,7 @@ void Game::movePiece(Move* currentMove)
 		// Reset undoMove.castling
 		memset(&undoMove.enPassant, 0, sizeof(Chess::EnPassant));
 	}
-	else if (true == currentMove->getEnPassant()->applied)
+	else if (currentMove->getEnPassant()->applied)
 	{
 		char chCapturedEP = getPieceAtPosition(currentMove->getEnPassant()->PawnCaptured.row, currentMove->getEnPassant()->PawnCaptured.column);
 
@@ -90,7 +90,7 @@ void Game::movePiece(Move* currentMove)
 	board[currentMove->getPresent().row][currentMove->getPresent().column] = EMPTY_SQUARE;
 
 	// Move piece to new position
-	if (true == currentMove->getPromotion()->applied)
+	if (currentMove->getPromotion()->applied)
 	{
 		board[currentMove->getFuture().row][currentMove->getFuture().column] = currentMove->getPromotion()->after;
 
@@ -106,7 +106,7 @@ void Game::movePiece(Move* currentMove)
 	}
 
 	// Was it a castling move?
-	if (currentMove->getCastling()->applied == true)
+	if (currentMove->getCastling()->applied)
 	{
 		// The king was already move, but we still have to move the rook to 'jump' the king
 		char piece = getPieceAtPosition(currentMove->getCastling()->rookBefore.row, currentMove->getCastling()->rookBefore.column);
@@ -173,7 +173,7 @@ void Game::undoLastMove()
 
 	// Moving it back
 	// If there was a castling
-	if (true == undoMove.promotion.applied)
+	if (undoMove.promotion.applied)
 	{
 		board[from.row][from.column] = undoMove.promotion.before;
 	}
@@ -311,688 +311,695 @@ char Game::considerMove(int row, int column, IntendedMove* intendedMove)
 	return piece;
 }
 
-Chess::UnderAttack Game::underAttack(int row, int column, int color, IntendedMove* intendedMove)
+void Game::checkUnderAttackHorizontal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack)
+{
+	for (int i = currentPosition.column + 1; i < 8; i++)
+	{
+		char chPieceFound = considerMove(currentPosition.row, i, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook to the right, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = currentPosition.row;
+			attack.attacker[attack.numAttackers - 1].position.column = i;
+			attack.attacker[attack.numAttackers - 1].direction = HORIZONTAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack horizontally, so no problem
+			break;
+		}
+	}
+
+	// Check all the way to the left
+	for (int i = currentPosition.column - 1; i >= 0; i--)
+	{
+		char chPieceFound = considerMove(currentPosition.row, i, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook to the right, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = currentPosition.row;
+			attack.attacker[attack.numAttackers - 1].position.column = i;
+			attack.attacker[attack.numAttackers - 1].direction = HORIZONTAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack horizontally, so no problem
+			break;
+		}
+	}
+}
+
+void Game::checkUnderAttackVertical(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack)
+{
+	// Check all the way up
+	for (int i = currentPosition.row + 1; i < 8; i++)
+	{
+		char chPieceFound = considerMove(i, currentPosition.column, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook to the right, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = currentPosition.column;
+			attack.attacker[attack.numAttackers - 1].direction = VERTICAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack vertically, so no problem
+			break;
+		}
+	}
+
+	// Check all the way down
+	for (int i = currentPosition.row - 1; i >= 0; i--)
+	{
+		char chPieceFound = considerMove(i, currentPosition.column, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook to the right, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = currentPosition.column;
+			attack.attacker[attack.numAttackers - 1].direction = VERTICAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack vertically, so no problem
+			break;
+		}
+	}
+}
+
+void Game::checkUnderAttackDiagonal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack)
+{
+	// Check the diagonal up-right
+	for (int i = currentPosition.row + 1, j = currentPosition.column + 1; i < 8 && j < 8; i++, j++)
+	{
+		char chPieceFound = considerMove(i, j, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
+			(i == currentPosition.row + 1) &&
+			(j == currentPosition.column + 1) &&
+			(color == WHITE_PIECE))
+		{
+			// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack diagonally, so no problem
+			break;
+		}
+	}
+
+	// Check the diagonal up-left
+	for (int i = currentPosition.row + 1, j = currentPosition.column - 1; i < 8 && j > 0; i++, j--)
+	{
+		char chPieceFound = considerMove(i, j, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
+			(i == currentPosition.row + 1) &&
+			(j == currentPosition.column - 1) &&
+			(color == WHITE_PIECE))
+		{
+			// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack diagonally, so no problem
+			break;
+		}
+	}
+
+	// Check the diagonal down-right
+	for (int i = currentPosition.row - 1, j = currentPosition.column + 1; i > 0 && j < 8; i--, j++)
+	{
+		char chPieceFound = considerMove(i, j, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
+			(i == currentPosition.row - 1) &&
+			(j == currentPosition.column + 1) &&
+			(color == BLACK_PIECE))
+		{
+			// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack diagonally, so no problem
+			break;
+		}
+	}
+
+	// Check the diagonal down-left
+	for (int i = currentPosition.row - 1, j = currentPosition.column - 1; i > 0 && j > 0; i--, j--)
+	{
+		char chPieceFound = considerMove(i, j, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
+			(i == currentPosition.row - 1) &&
+			(j == currentPosition.column - 1) &&
+			(color == BLACK_PIECE))
+		{
+			// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the piece is in jeopardy
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = i;
+			attack.attacker[attack.numAttackers - 1].position.column = j;
+			attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not attack diagonally, so no problem
+			break;
+		}
+	}
+}
+
+void Game::checkUnderAttackLShape(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack)
+{
+	// Check if the piece is put in jeopardy by a knight
+	Position knight_moves[8] = { {  1, -2 }, {  2, -1 }, {  2, 1 }, {  1, 2 },
+								 { -1, -2 }, { -2, -1 }, { -2, 1 }, { -1, 2 } };
+	for (int i = 0; i < 8; i++)
+	{
+		int iRowToTest = currentPosition.row + knight_moves[i].row;
+		int iColumnToTest = currentPosition.column + knight_moves[i].column;
+
+		if (iRowToTest < 0 || iRowToTest > 7 || iColumnToTest < 0 || iColumnToTest > 7)
+		{
+			// This square does not even exist, so no need to test
+			continue;
+		}
+
+		char chPieceFound = considerMove(iRowToTest, iColumnToTest, intendedMove);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color, so no problem
+			continue;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_KNIGHT))
+		{
+			attack.underAttack = true;
+			attack.numAttackers += 1;
+
+			attack.attacker[attack.numAttackers - 1].position.row = iRowToTest;
+			attack.attacker[attack.numAttackers - 1].position.column = iColumnToTest;
+			break;
+		}
+	}
+}
+
+Chess::UnderAttack Game::underAttack(Chess::Position currentPosition, int color, IntendedMove* intendedMove)
 {
 	UnderAttack attack = { 0 };
 
-	// a) Direction: HORIZONTAL
-	{
-		// Check all the way to the right
-		for (int i = column + 1; i < 8; i++)
-		{
-			char chPieceFound = considerMove(row, i, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook to the right, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = row;
-				attack.attacker[attack.numAttackers - 1].position.column = i;
-				attack.attacker[attack.numAttackers - 1].direction = HORIZONTAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack horizontally, so no problem
-				break;
-			}
-		}
-
-		// Check all the way to the left
-		for (int i = column - 1; i >= 0; i--)
-		{
-			char chPieceFound = considerMove(row, i, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook to the right, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = row;
-				attack.attacker[attack.numAttackers - 1].position.column = i;
-				attack.attacker[attack.numAttackers - 1].direction = HORIZONTAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack horizontally, so no problem
-				break;
-			}
-		}
-	}
-
-	// b) Direction: VERTICAL
-	{
-		// Check all the way up
-		for (int i = row + 1; i < 8; i++)
-		{
-			char chPieceFound = considerMove(i, column, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook to the right, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = column;
-				attack.attacker[attack.numAttackers - 1].direction = VERTICAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack vertically, so no problem
-				break;
-			}
-		}
-
-		// Check all the way down
-		for (int i = row - 1; i >= 0; i--)
-		{
-			char chPieceFound = considerMove(i, column, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook to the right, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = column;
-				attack.attacker[attack.numAttackers - 1].direction = VERTICAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack vertically, so no problem
-				break;
-			}
-		}
-	}
-
-	// c) Direction: DIAGONAL
-	{
-		// Check the diagonal up-right
-		for (int i = row + 1, j = column + 1; i < 8 && j < 8; i++, j++)
-		{
-			char chPieceFound = considerMove(i, j, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
-				(i == row + 1) &&
-				(j == column + 1) &&
-				(color == WHITE_PIECE))
-			{
-				// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack diagonally, so no problem
-				break;
-			}
-		}
-
-		// Check the diagonal up-left
-		for (int i = row + 1, j = column - 1; i < 8 && j > 0; i++, j--)
-		{
-			char chPieceFound = considerMove(i, j, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
-				(i == row + 1) &&
-				(j == column - 1) &&
-				(color == WHITE_PIECE))
-			{
-				// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack diagonally, so no problem
-				break;
-			}
-		}
-
-		// Check the diagonal down-right
-		for (int i = row - 1, j = column + 1; i > 0 && j < 8; i--, j++)
-		{
-			char chPieceFound = considerMove(i, j, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
-				(i == row - 1) &&
-				(j == column + 1) &&
-				(color == BLACK_PIECE))
-			{
-				// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack diagonally, so no problem
-				break;
-			}
-		}
-
-		// Check the diagonal down-left
-		for (int i = row - 1, j = column - 1; i > 0 && j > 0; i--, j--)
-		{
-			char chPieceFound = considerMove(i, j, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
-				(i == row - 1) &&
-				(j == column - 1) &&
-				(color == BLACK_PIECE))
-			{
-				// A pawn only puts another piece in jeopardy if it's (diagonally) right next to it
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the piece is in jeopardy
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = i;
-				attack.attacker[attack.numAttackers - 1].position.column = j;
-				attack.attacker[attack.numAttackers - 1].direction = DIAGONAL;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not attack diagonally, so no problem
-				break;
-			}
-		}
-	}
-
-	// d) Direction: L_SHAPED
-	{
-		// Check if the piece is put in jeopardy by a knigh
-
-		Position knight_moves[8] = { {  1, -2 }, {  2, -1 }, {  2, 1 }, {  1, 2 },
-									 { -1, -2 }, { -2, -1 }, { -2, 1 }, { -1, 2 } };
-		for (int i = 0; i < 8; i++)
-		{
-			int iRowToTest = row + knight_moves[i].row;
-			int iColumnToTest = column + knight_moves[i].column;
-
-			if (iRowToTest < 0 || iRowToTest > 7 || iColumnToTest < 0 || iColumnToTest > 7)
-			{
-				// This square does not even exist, so no need to test
-				continue;
-			}
-
-			char chPieceFound = considerMove(iRowToTest, iColumnToTest, intendedMove);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color, so no problem
-				continue;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_KNIGHT))
-			{
-				attack.underAttack = true;
-				attack.numAttackers += 1;
-
-				attack.attacker[attack.numAttackers - 1].position.row = iRowToTest;
-				attack.attacker[attack.numAttackers - 1].position.column = iColumnToTest;
-				break;
-			}
-		}
-	}
+	this->checkUnderAttackHorizontal(currentPosition, color, intendedMove, attack);
+	this->checkUnderAttackVertical(currentPosition, color, intendedMove, attack);
+	this->checkUnderAttackDiagonal(currentPosition, color, intendedMove, attack);
+	this->checkUnderAttackLShape(currentPosition, color, intendedMove, attack);
 
 	return attack;
 }
 
-bool Game::isReachable(int row, int column, int color)
+void Game::checkReachableHorizontal(Chess::Position currentPosition, int color, bool& bReachable)
+{
+	// Check all the way to the right
+	for (int i = currentPosition.column + 1; i < 8; i++)
+	{
+		char chPieceFound = getPieceAtPosition(currentPosition.row, i);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook to the right, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move horizontally
+			break;
+		}
+	}
+
+	// Check all the way to the left
+	for (int i = currentPosition.column - 1; i >= 0; i--)
+	{
+		char chPieceFound = getPieceAtPosition(currentPosition.row, i);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook to the left, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move horizontally
+			break;
+		}
+	}
+}
+
+void Game::checkReachableVertical(Chess::Position currentPosition, int color, bool& bReachable)
+{
+	// Check all the way up
+	for (int i = currentPosition.row + 1; i < 8; i++)
+	{
+		char chPieceFound = getPieceAtPosition(i, currentPosition.column);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
+			(getPieceColor(chPieceFound) == BLACK_PIECE) &&
+			(i == currentPosition.row + 1))
+		{
+			// There is a pawn one square up, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook on the way up, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move vertically
+			break;
+		}
+	}
+
+	// Check all the way down
+	for (int i = currentPosition.row - 1; i >= 0; i--)
+	{
+		char chPieceFound = getPieceAtPosition(i, currentPosition.column);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
+			(getPieceColor(chPieceFound) == WHITE_PIECE) &&
+			(i == currentPosition.row - 1))
+		{
+			// There is a pawn one square down, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
+		{
+			// There is a queen or a rook on the way down, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move vertically
+			break;
+		}
+	}
+}
+
+void Game::checkReachableDiagonal(Chess::Position currentPosition, int color, bool& bReachable)
+{
+	// Check the diagonal up-right
+	for (int i = currentPosition.row + 1, j = currentPosition.column + 1; i < 8 && j < 8; i++, j++)
+	{
+		char chPieceFound = getPieceAtPosition(i, j);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move diagonally
+			break;
+		}
+	}
+
+	// Check the diagonal up-left
+	for (int i = currentPosition.row + 1, j = currentPosition.column - 1; i < 8 && j > 0; i++, j--)
+	{
+		char chPieceFound = getPieceAtPosition(i, j);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move diagonally
+			break;
+		}
+	}
+
+	// Check the diagonal down-right
+	for (int i = currentPosition.row - 1, j = currentPosition.column + 1; i > 0 && j < 8; i--, j++)
+	{
+		char chPieceFound = getPieceAtPosition(i, j);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move diagonally
+			break;
+		}
+	}
+
+	// Check the diagonal down-left
+	for (int i = currentPosition.row - 1, j = currentPosition.column - 1; i > 0 && j > 0; i--, j--)
+	{
+		char chPieceFound = getPieceAtPosition(i, j);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			break;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
+			(toupper(chPieceFound) == Chess::PIECE_TYPE_BISHOP))
+		{
+			// There is a queen or a bishop in that direction, so the square is reachable
+			bReachable = true;
+			break;
+		}
+		else
+		{
+			// There is a piece that does not move diagonally
+			break;
+		}
+	}
+}
+
+void Game::checkReachableLShaped(Chess::Position currentPosition, int color, bool& bReachable)
+{
+	// Check if the piece is put in jeopardy by a knigh
+	Position knight_moves[8] = { {  1, -2 }, {  2, -1 }, {  2, 1 }, {  1, 2 },
+								 { -1, -2 }, { -2, -1 }, { -2, 1 }, { -1, 2 } };
+	for (int i = 0; i < 8; i++)
+	{
+		int iRowToTest = currentPosition.row + knight_moves[i].row;
+		int iColumnToTest = currentPosition.column + knight_moves[i].column;
+
+		if (iRowToTest < 0 || iRowToTest > 7 || iColumnToTest < 0 || iColumnToTest > 7)
+		{
+			// This square does not even exist, so no need to test
+			continue;
+		}
+
+		char chPieceFound = getPieceAtPosition(iRowToTest, iColumnToTest);
+		if (EMPTY_SQUARE == chPieceFound)
+		{
+			// This square is empty, move on
+			continue;
+		}
+
+		if (color == getPieceColor(chPieceFound))
+		{
+			// This is a piece of the same color
+			continue;
+		}
+		else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_KNIGHT))
+		{
+			bReachable = true;
+			break;
+		}
+	}
+}
+
+bool Game::isReachable(Chess::Position currentPosition, int color)
 {
 	bool bReachable = false;
 
-	// a) Direction: HORIZONTAL
-	{
-		// Check all the way to the right
-		for (int i = column + 1; i < 8; i++)
-		{
-			char chPieceFound = getPieceAtPosition(row, i);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook to the right, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move horizontally
-				break;
-			}
-		}
-
-		// Check all the way to the left
-		for (int i = column - 1; i >= 0; i--)
-		{
-			char chPieceFound = getPieceAtPosition(row, i);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook to the left, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move horizontally
-				break;
-			}
-		}
-	}
-
-	// b) Direction: VERTICAL
-	{
-		// Check all the way up
-		for (int i = row + 1; i < 8; i++)
-		{
-			char chPieceFound = getPieceAtPosition(i, column);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
-				(getPieceColor(chPieceFound) == BLACK_PIECE) &&
-				(i == row + 1))
-			{
-				// There is a pawn one square up, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook on the way up, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move vertically
-				break;
-			}
-		}
-
-		// Check all the way down
-		for (int i = row - 1; i >= 0; i--)
-		{
-			char chPieceFound = getPieceAtPosition(i, column);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_PAWN) &&
-				(getPieceColor(chPieceFound) == WHITE_PIECE) &&
-				(i == row - 1))
-			{
-				// There is a pawn one square down, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_ROOK))
-			{
-				// There is a queen or a rook on the way down, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move vertically
-				break;
-			}
-		}
-	}
-
-	// c) Direction: DIAGONAL
-	{
-		// Check the diagonal up-right
-		for (int i = row + 1, j = column + 1; i < 8 && j < 8; i++, j++)
-		{
-			char chPieceFound = getPieceAtPosition(i, j);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move diagonally
-				break;
-			}
-		}
-
-		// Check the diagonal up-left
-		for (int i = row + 1, j = column - 1; i < 8 && j > 0; i++, j--)
-		{
-			char chPieceFound = getPieceAtPosition(i, j);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move diagonally
-				break;
-			}
-		}
-
-		// Check the diagonal down-right
-		for (int i = row - 1, j = column + 1; i > 0 && j < 8; i--, j++)
-		{
-			char chPieceFound = getPieceAtPosition(i, j);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move diagonally
-				break;
-			}
-		}
-
-		// Check the diagonal down-left
-		for (int i = row - 1, j = column - 1; i > 0 && j > 0; i--, j--)
-		{
-			char chPieceFound = getPieceAtPosition(i, j);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				break;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_QUEEN) ||
-				(toupper(chPieceFound) == Chess::PIECE_TYPE_BISHOP))
-			{
-				// There is a queen or a bishop in that direction, so the square is reachable
-				bReachable = true;
-				break;
-			}
-			else
-			{
-				// There is a piece that does not move diagonally
-				break;
-			}
-		}
-	}
-
-	// d) Direction: L_SHAPED
-	{
-		// Check if the piece is put in jeopardy by a knigh
-
-		Position knight_moves[8] = { {  1, -2 }, {  2, -1 }, {  2, 1 }, {  1, 2 },
-									 { -1, -2 }, { -2, -1 }, { -2, 1 }, { -1, 2 } };
-		for (int i = 0; i < 8; i++)
-		{
-			int iRowToTest = row + knight_moves[i].row;
-			int iColumnToTest = column + knight_moves[i].column;
-
-			if (iRowToTest < 0 || iRowToTest > 7 || iColumnToTest < 0 || iColumnToTest > 7)
-			{
-				// This square does not even exist, so no need to test
-				continue;
-			}
-
-			char chPieceFound = getPieceAtPosition(iRowToTest, iColumnToTest);
-			if (EMPTY_SQUARE == chPieceFound)
-			{
-				// This square is empty, move on
-				continue;
-			}
-
-			if (color == getPieceColor(chPieceFound))
-			{
-				// This is a piece of the same color
-				continue;
-			}
-			else if ((toupper(chPieceFound) == Chess::PIECE_TYPE_KNIGHT))
-			{
-				bReachable = true;
-				break;
-			}
-		}
-	}
+	this->checkReachableHorizontal(currentPosition, color, bReachable);
+	this->checkReachableVertical(currentPosition, color, bReachable);
+	this->checkReachableDiagonal(currentPosition, color, bReachable);
+	this->checkReachableLShaped(currentPosition, color, bReachable);
 
 	return bReachable;
 }
@@ -1201,7 +1208,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = starting.column + 1; i < finishing.column; i++)
 			{
-				if (true == isReachable(starting.row, i, getOpponentColor()))
+				Chess::Position position = { starting.row, i };
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1214,7 +1222,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = starting.column - 1; i > finishing.column; i--)
 			{
-				if (true == isReachable(starting.row, i, getOpponentColor()))
+				Chess::Position position = { starting.row, i };
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1239,7 +1248,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = starting.row + 1; i < finishing.row; i++)
 			{
-				if (true == isReachable(i, starting.column, getOpponentColor()))
+				Chess::Position position = {i, starting.column};
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1252,7 +1262,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = starting.row - 1; i > finishing.row; i--)
 			{
-				if (true == isReachable(i, starting.column, getOpponentColor()))
+				Chess::Position position = { i, starting.column };
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1269,7 +1280,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = 1; i < abs(finishing.row - starting.row); i++)
 			{
-				if (true == isReachable(starting.row + i, starting.column + i, getOpponentColor()))
+				Chess::Position position = {starting.row + i, starting.column + i};
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1282,7 +1294,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = 1; i < abs(finishing.row - starting.row); i++)
 			{
-				if (true == isReachable(starting.row + i, starting.column - i, getOpponentColor()))
+				Chess::Position position = {starting.row + i, starting.column - i};
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1295,7 +1308,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = 1; i < abs(finishing.row - starting.row); i++)
 			{
-				if (true == isReachable(starting.row - i, starting.column + i, getOpponentColor()))
+				Chess::Position position = {starting.row - i, starting.column + i};
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1308,7 +1322,8 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 		{
 			for (int i = 1; i < abs(finishing.row - starting.row); i++)
 			{
-				if (true == isReachable(starting.row - i, starting.column - i, getOpponentColor()))
+				Chess::Position position = {starting.row - i, starting.column - i};
+				if (isReachable(position, getOpponentColor()))
 				{
 					// Some piece can block the way
 					bBlocked = true;
@@ -1333,7 +1348,7 @@ bool Game::isCheckMate()
 	bool bCheckmate = false;
 
 	// 1. First of all, it the king in check?
-	if (false == isPlayerKingInCheck())
+	if (!isPlayerKingInCheck())
 	{
 		return false;
 	}
@@ -1371,9 +1386,9 @@ bool Game::isCheckMate()
 		// Now, for every possible move of the king, check if it would be in jeopardy
 		// Since the move has already been made, current_game->getCurrentTurn() now will return 
 		// the next player's color. And it is in fact this king that we want to check for jeopardy
-		Chess::UnderAttack king_moved = underAttack(iRowToTest, iColumnToTest, getCurrentTurn(), &intendedMove);
+		Chess::UnderAttack king_moved = underAttack(intendedMove.to, getCurrentTurn(), &intendedMove);
 
-		if (false == king_moved.underAttack)
+		if (!king_moved.underAttack)
 		{
 			// This means there is at least one position when the king would not be in jeopardy, so that's not a checkmate
 			return false;
@@ -1381,14 +1396,14 @@ bool Game::isCheckMate()
 	}
 
 	// 3. Can the attacker be taken or another piece get into the way? 
-	Chess::UnderAttack king_attacked = underAttack(king.row, king.column, getCurrentTurn());
+	Chess::UnderAttack king_attacked = underAttack(king, getCurrentTurn());
 	if (1 == king_attacked.numAttackers)
 	{
 		// Can the attacker be taken?
 		Chess::UnderAttack king_attacker = { 0 };
-		king_attacker = underAttack(king_attacked.attacker[0].position.row, king_attacked.attacker[0].position.column, getOpponentColor());
+		king_attacker = underAttack(king_attacked.attacker[0].position, getOpponentColor());
 
-		if (true == king_attacker.underAttack)
+		if (king_attacker.underAttack)
 		{
 			// This means that the attacker can be taken, so it's not a checkmate
 			return false;
@@ -1412,7 +1427,7 @@ bool Game::isCheckMate()
 
 			case Chess::PIECE_TYPE_BISHOP:
 			{
-				if (false == canBeBlocked(king_attacked.attacker[0].position, king, Chess::DIAGONAL))
+				if (!canBeBlocked(king_attacked.attacker[0].position, king, Chess::DIAGONAL))
 				{
 					// If no piece can get in the way, it's a checkmate
 					bCheckmate = true;
@@ -1422,7 +1437,7 @@ bool Game::isCheckMate()
 
 			case Chess::PIECE_TYPE_ROOK:
 			{
-				if (false == canBeBlocked(king_attacked.attacker[0].position, king, king_attacked.attacker[0].direction))
+				if (!canBeBlocked(king_attacked.attacker[0].position, king, king_attacked.attacker[0].direction))
 				{
 					// If no piece can get in the way, it's a checkmate
 					bCheckmate = true;
@@ -1432,7 +1447,7 @@ bool Game::isCheckMate()
 
 			case Chess::PIECE_TYPE_QUEEN:
 			{
-				if (false == canBeBlocked(king_attacked.attacker[0].position, king, king_attacked.attacker[0].direction))
+				if (!canBeBlocked(king_attacked.attacker[0].position, king, king_attacked.attacker[0].direction))
 				{
 					// If no piece can get in the way, it's a checkmate
 					bCheckmate = true;
@@ -1478,9 +1493,9 @@ bool Game::isKingInCheck(int color, IntendedMove* intendedMove)
 		king = findKing(color);
 	}
 
-	UnderAttack king_attacked = underAttack(king.row, king.column, color, intendedMove);
+	UnderAttack king_attacked = underAttack(king, color, intendedMove);
 
-	if (true == king_attacked.underAttack)
+	if (king_attacked.underAttack)
 	{
 		bCheck = true;
 	}

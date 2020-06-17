@@ -368,13 +368,13 @@ bool GameController::isKingMovementValid(Move* currentMove) const
 		// Castling is only allowed in these circunstances:
 
 		// 1. King is not in check
-		if (true == currentGame->isPlayerKingInCheck())
+		if (currentGame->isPlayerKingInCheck())
 		{
 			return false;
 		}
 
 		// 2. No pieces in between the king and the rook
-		if (false == currentGame->isPathFree(currentMove->getPresent(), currentMove->getFuture(), Chess::HORIZONTAL))
+		if (!currentGame->isPathFree(currentMove->getPresent(), currentMove->getFuture(), Chess::HORIZONTAL))
 		{
 			return false;
 		}
@@ -384,7 +384,7 @@ bool GameController::isKingMovementValid(Move* currentMove) const
 		if (currentMove->getFuture().column > currentMove->getPresent().column)
 		{
 			// if currentMove->getFuture().column is greather, it means king side
-			if (false == currentGame->isCastlingAllowed(Chess::Side::KING_SIDE, Chess::getPieceColor(piece)))
+			if (!currentGame->isCastlingAllowed(Chess::Side::KING_SIDE, Chess::getPieceColor(piece)))
 			{
 				createNextMessage("Castling to the king side is not allowed.\n");
 				return false;
@@ -392,8 +392,9 @@ bool GameController::isKingMovementValid(Move* currentMove) const
 			else
 			{
 				// Check if the square that the king skips is not under attack
-				Chess::UnderAttack square_skipped = currentGame->underAttack(currentMove->getPresent().row, currentMove->getPresent().column + 1, currentGame->getCurrentTurn());
-				if (false == square_skipped.underAttack)
+				Chess::Position currentPosition = { currentMove->getPresent().row, currentMove->getPresent().column + 1 };
+				Chess::UnderAttack square_skipped = currentGame->underAttack(currentPosition, currentGame->getCurrentTurn());
+				if (!square_skipped.underAttack)
 				{
 					// Fill the currentMove->getCastling() structure
 					currentMove->getCastling()->applied = true;
@@ -413,7 +414,7 @@ bool GameController::isKingMovementValid(Move* currentMove) const
 		else //if (currentMove->getFuture().column < currentMove->getPresent().column)
 		{
 			// if currentMove->getPresent().column is greather, it means queen side
-			if (false == currentGame->isCastlingAllowed(Chess::Side::QUEEN_SIDE, Chess::getPieceColor(piece)))
+			if (!currentGame->isCastlingAllowed(Chess::Side::QUEEN_SIDE, Chess::getPieceColor(piece)))
 			{
 				createNextMessage("Castling to the queen side is not allowed.\n");
 				return false;
@@ -421,8 +422,9 @@ bool GameController::isKingMovementValid(Move* currentMove) const
 			else
 			{
 				// Check if the square that the king skips is not attacked
-				Chess::UnderAttack square_skipped = currentGame->underAttack(currentMove->getPresent().row, currentMove->getPresent().column - 1, currentGame->getCurrentTurn());
-				if (false == square_skipped.underAttack)
+				Chess::Position currentPosition = { currentMove->getPresent().row, currentMove->getPresent().column - 1 };
+				Chess::UnderAttack square_skipped = currentGame->underAttack(currentPosition, currentGame->getCurrentTurn());
+				if (!square_skipped.underAttack)
 				{
 					// Fill the currentMove->getCastling() structure
 					currentMove->getCastling()->applied = true;
@@ -632,7 +634,7 @@ void GameController::movePiece(void)
 
 	if (Chess::WHITE_PIECE == currentGame->getCurrentTurn())
 	{
-		if (false == Chess::isWhitePiece(piece))
+		if (!Chess::isWhitePiece(piece))
 		{
 			createNextMessage("It is WHITE's turn and you picked a BLACK piece\n");
 			return;
@@ -640,7 +642,7 @@ void GameController::movePiece(void)
 	}
 	else
 	{
-		if (false == Chess::isBlackPiece(piece))
+		if (!Chess::isBlackPiece(piece))
 		{
 			createNextMessage("It is BLACK's turn and you picked a WHITE piece\n");
 			return;

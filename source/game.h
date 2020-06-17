@@ -28,9 +28,25 @@ public:
 
 	char considerMove(int row, int column, IntendedMove* intendedMove = nullptr);
 
-	UnderAttack underAttack(int row, int column, int color, IntendedMove* intendedMove = nullptr);
+	Chess::UnderAttack underAttack(Chess::Position currentPosition, int color, IntendedMove* intendedMove = nullptr);
 
-	bool isReachable(int row, int column, int color);
+	void checkReachableHorizontal(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkReachableVertical(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkReachableDiagonal(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkReachableLShaped(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkUnderAttackHorizontal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	void checkUnderAttackVertical(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	void checkUnderAttackDiagonal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	void checkUnderAttackLShape(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	bool isReachable(Chess::Position currentPosition, int color);
 
 	bool isSquareOccupied(int row, int column);
 
