@@ -1016,6 +1016,163 @@ bool Game::isSquareOccupied(int row, int column)
 	return bOccupied;
 }
 
+void Game::isPathFreeHorizontal(Position starting, Position finishing, bool& bFree)
+{
+	// If it is a horizontal move, we can assume the starting.row == finishing.row
+		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
+	if (starting.column == finishing.column)
+	{
+		cout << "Error. Movement is horizontal but column is the same\n";
+	}
+
+	// Moving to the right
+	else if (starting.column < finishing.column)
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = starting.column + 1; i < finishing.column; i++)
+		{
+			if (isSquareOccupied(starting.row, i))
+			{
+				bFree = false;
+				cout << "Horizontal path to the right is not clear!\n";
+			}
+		}
+	}
+
+	// Moving to the left
+	else //if (starting.column > finishing.column)
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = starting.column - 1; i > finishing.column; i--)
+		{
+			if (isSquareOccupied(starting.row, i))
+			{
+				bFree = false;
+				cout << "Horizontal path to the left is not clear!\n";
+			}
+		}
+	}
+}
+
+void Game::isPathFreeVertical(Position starting, Position finishing, bool& bFree)
+{
+	// If it is a vertical move, we can assume the starting.column == finishing.column
+		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
+	if (starting.row == finishing.row)
+	{
+		cout << "Error. Movement is vertical but row is the same\n";
+		throw("Error. Movement is vertical but row is the same");
+	}
+
+	// Moving up
+	else if (starting.row < finishing.row)
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = starting.row + 1; i < finishing.row; i++)
+		{
+			if (isSquareOccupied(i, starting.column))
+			{
+				bFree = false;
+				cout << "Vertical path up is not clear!\n";
+			}
+		}
+	}
+
+	// Moving down
+	else //if (starting.column > finishing.row)
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = starting.row - 1; i > finishing.row; i--)
+		{
+			if (isSquareOccupied(i, starting.column))
+			{
+				bFree = false;
+				cout << "Vertical path down is not clear!\n";
+			}
+		}
+	}
+}
+
+void Game::isPathFreeDiagonal(Position starting, Position finishing, bool& bFree)
+{
+	// Moving up and right
+	if ((finishing.row > starting.row) && (finishing.column > starting.column))
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			if (isSquareOccupied(starting.row + i, starting.column + i))
+			{
+				bFree = false;
+				cout << "Diagonal path up-right is not clear!\n";
+			}
+		}
+	}
+
+	// Moving up and left
+	else if ((finishing.row > starting.row) && (finishing.column < starting.column))
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			if (isSquareOccupied(starting.row + i, starting.column - i))
+			{
+				bFree = false;
+				cout << "Diagonal path up-left is not clear!\n";
+			}
+		}
+	}
+
+	// Moving down and right
+	else if ((finishing.row < starting.row) && (finishing.column > starting.column))
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			if (isSquareOccupied(starting.row - i, starting.column + i))
+			{
+				bFree = false;
+				cout << "Diagonal path down-right is not clear!\n";
+			}
+		}
+	}
+
+	// Moving down and left
+	else if ((finishing.row < starting.row) && (finishing.column < starting.column))
+	{
+		// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
+		bFree = true;
+
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			if (isSquareOccupied(starting.row - i, starting.column - i))
+			{
+				bFree = false;
+				cout << "Diagonal path down-left is not clear!\n";
+			}
+		}
+	}
+
+	else
+	{
+		throw("Error. Diagonal move not allowed");
+	}
+}
+
 bool Game::isPathFree(Position starting, Position finishing, int direction)
 {
 	bool bFree = false;
@@ -1024,166 +1181,166 @@ bool Game::isPathFree(Position starting, Position finishing, int direction)
 	{
 	case Chess::HORIZONTAL:
 	{
-		// If it is a horizontal move, we can assume the starting.row == finishing.row
-		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
-		if (starting.column == finishing.column)
-		{
-			cout << "Error. Movement is horizontal but column is the same\n";
-		}
-
-		// Moving to the right
-		else if (starting.column < finishing.column)
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = starting.column + 1; i < finishing.column; i++)
-			{
-				if (isSquareOccupied(starting.row, i))
-				{
-					bFree = false;
-					cout << "Horizontal path to the right is not clear!\n";
-				}
-			}
-		}
-
-		// Moving to the left
-		else //if (starting.column > finishing.column)
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = starting.column - 1; i > finishing.column; i--)
-			{
-				if (isSquareOccupied(starting.row, i))
-				{
-					bFree = false;
-					cout << "Horizontal path to the left is not clear!\n";
-				}
-			}
-		}
+		this->isPathFreeHorizontal(starting, finishing, bFree);
 	}
 	break;
 
 	case Chess::VERTICAL:
 	{
-		// If it is a vertical move, we can assume the starting.column == finishing.column
-		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
-		if (starting.row == finishing.row)
-		{
-			cout << "Error. Movement is vertical but row is the same\n";
-			throw("Error. Movement is vertical but row is the same");
-		}
-
-		// Moving up
-		else if (starting.row < finishing.row)
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = starting.row + 1; i < finishing.row; i++)
-			{
-				if (isSquareOccupied(i, starting.column))
-				{
-					bFree = false;
-					cout << "Vertical path up is not clear!\n";
-				}
-			}
-		}
-
-		// Moving down
-		else //if (starting.column > finishing.row)
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = starting.row - 1; i > finishing.row; i--)
-			{
-				if (isSquareOccupied(i, starting.column))
-				{
-					bFree = false;
-					cout << "Vertical path down is not clear!\n";
-				}
-			}
-		}
+		this->isPathFreeVertical(starting, finishing, bFree);
 	}
 	break;
 
 	case Chess::DIAGONAL:
 	{
-		// Moving up and right
-		if ((finishing.row > starting.row) && (finishing.column > starting.column))
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				if (isSquareOccupied(starting.row + i, starting.column + i))
-				{
-					bFree = false;
-					cout << "Diagonal path up-right is not clear!\n";
-				}
-			}
-		}
-
-		// Moving up and left
-		else if ((finishing.row > starting.row) && (finishing.column < starting.column))
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				if (isSquareOccupied(starting.row + i, starting.column - i))
-				{
-					bFree = false;
-					cout << "Diagonal path up-left is not clear!\n";
-				}
-			}
-		}
-
-		// Moving down and right
-		else if ((finishing.row < starting.row) && (finishing.column > starting.column))
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				if (isSquareOccupied(starting.row - i, starting.column + i))
-				{
-					bFree = false;
-					cout << "Diagonal path down-right is not clear!\n";
-				}
-			}
-		}
-
-		// Moving down and left
-		else if ((finishing.row < starting.row) && (finishing.column < starting.column))
-		{
-			// Settting bFree as initially true, only inside the cases, guarantees that the path is checked
-			bFree = true;
-
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				if (isSquareOccupied(starting.row - i, starting.column - i))
-				{
-					bFree = false;
-					cout << "Diagonal path down-left is not clear!\n";
-				}
-			}
-		}
-
-		else
-		{
-			throw("Error. Diagonal move not allowed");
-		}
+		this->isPathFreeDiagonal(starting, finishing, bFree);
 	}
 	break;
 	}
 
 	return bFree;
+}
+
+void Game::canBeBlockedHorizontal(Position starting, Position finishing, bool& bBlocked)
+{
+	// If it is a horizontal move, we can assume the starting.row == finishing.row
+		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
+	if (starting.column == finishing.column)
+	{
+		cout << "Error. Movement is horizontal but column is the same\n";
+	}
+
+	// Moving to the right
+	else if (starting.column < finishing.column)
+	{
+		for (int i = starting.column + 1; i < finishing.column; i++)
+		{
+			Chess::Position position = { starting.row, i };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+
+	// Moving to the left
+	else //if (starting.column > finishing.column)
+	{
+		for (int i = starting.column - 1; i > finishing.column; i--)
+		{
+			Chess::Position position = { starting.row, i };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+}
+
+void Game::canBeBlockedVertical(Position starting, Position finishing, bool& bBlocked)
+{
+	// If it is a vertical move, we can assume the starting.column == finishing.column
+		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
+	if (starting.row == finishing.row)
+	{
+		cout << "Error. Movement is vertical but row is the same\n";
+		throw("Error. Movement is vertical but row is the same");
+	}
+
+	// Moving up
+	else if (starting.row < finishing.row)
+	{
+		for (int i = starting.row + 1; i < finishing.row; i++)
+		{
+			Chess::Position position = { i, starting.column };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+
+	// Moving down
+	else //if (starting.column > finishing.row)
+	{
+		for (int i = starting.row - 1; i > finishing.row; i--)
+		{
+			Chess::Position position = { i, starting.column };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+}
+
+void Game::canBeBlockedDiagonal(Position starting, Position finishing, bool& bBlocked)
+{
+	// Moving up and right
+	if ((finishing.row > starting.row) && (finishing.column > starting.column))
+	{
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			Chess::Position position = { starting.row + i, starting.column + i };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+
+	// Moving up and left
+	else if ((finishing.row > starting.row) && (finishing.column < starting.column))
+	{
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			Chess::Position position = { starting.row + i, starting.column - i };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+
+	// Moving down and right
+	else if ((finishing.row < starting.row) && (finishing.column > starting.column))
+	{
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			Chess::Position position = { starting.row - i, starting.column + i };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+
+	// Moving down and left
+	else if ((finishing.row < starting.row) && (finishing.column < starting.column))
+	{
+		for (int i = 1; i < abs(finishing.row - starting.row); i++)
+		{
+			Chess::Position position = { starting.row - i, starting.column - i };
+			if (isReachable(position, getOpponentColor()))
+			{
+				// Some piece can block the way
+				bBlocked = true;
+			}
+		}
+	}
+
+	else
+	{
+		cout << "Error. Diagonal move not allowed\n";
+		throw("Error. Diagonal move not allowed");
+	}
 }
 
 bool Game::canBeBlocked(Position starting, Position finishing, int direction)
@@ -1196,146 +1353,19 @@ bool Game::canBeBlocked(Position starting, Position finishing, int direction)
 	{
 	case Chess::HORIZONTAL:
 	{
-		// If it is a horizontal move, we can assume the starting.row == finishing.row
-		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
-		if (starting.column == finishing.column)
-		{
-			cout << "Error. Movement is horizontal but column is the same\n";
-		}
-
-		// Moving to the right
-		else if (starting.column < finishing.column)
-		{
-			for (int i = starting.column + 1; i < finishing.column; i++)
-			{
-				Chess::Position position = { starting.row, i };
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
-
-		// Moving to the left
-		else //if (starting.column > finishing.column)
-		{
-			for (int i = starting.column - 1; i > finishing.column; i--)
-			{
-				Chess::Position position = { starting.row, i };
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
+		this->canBeBlockedHorizontal(starting, finishing, bBlocked);
 	}
 	break;
 
 	case Chess::VERTICAL:
 	{
-		// If it is a vertical move, we can assume the starting.column == finishing.column
-		// If the piece wants to move from column 0 to column 7, we must check if columns 1-6 are free
-		if (starting.row == finishing.row)
-		{
-			cout << "Error. Movement is vertical but row is the same\n";
-			throw("Error. Movement is vertical but row is the same");
-		}
-
-		// Moving up
-		else if (starting.row < finishing.row)
-		{
-			for (int i = starting.row + 1; i < finishing.row; i++)
-			{
-				Chess::Position position = {i, starting.column};
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
-
-		// Moving down
-		else //if (starting.column > finishing.row)
-		{
-			for (int i = starting.row - 1; i > finishing.row; i--)
-			{
-				Chess::Position position = { i, starting.column };
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
+		this->canBeBlockedVertical(starting, finishing, bBlocked);
 	}
 	break;
 
 	case Chess::DIAGONAL:
 	{
-		// Moving up and right
-		if ((finishing.row > starting.row) && (finishing.column > starting.column))
-		{
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				Chess::Position position = {starting.row + i, starting.column + i};
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
-
-		// Moving up and left
-		else if ((finishing.row > starting.row) && (finishing.column < starting.column))
-		{
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				Chess::Position position = {starting.row + i, starting.column - i};
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
-
-		// Moving down and right
-		else if ((finishing.row < starting.row) && (finishing.column > starting.column))
-		{
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				Chess::Position position = {starting.row - i, starting.column + i};
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
-
-		// Moving down and left
-		else if ((finishing.row < starting.row) && (finishing.column < starting.column))
-		{
-			for (int i = 1; i < abs(finishing.row - starting.row); i++)
-			{
-				Chess::Position position = {starting.row - i, starting.column - i};
-				if (isReachable(position, getOpponentColor()))
-				{
-					// Some piece can block the way
-					bBlocked = true;
-				}
-			}
-		}
-
-		else
-		{
-			cout << "Error. Diagonal move not allowed\n";
-			throw("Error. Diagonal move not allowed");
-		}
+		this->canBeBlockedDiagonal(starting, finishing, bBlocked);
 	}
 	break;
 	}

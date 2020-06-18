@@ -31,7 +31,7 @@ void printLogo(void)
 	cout << "     | |    | |__| | |__  | (___| (___ \n";
 	cout << "     | |    |  __  |  __|  \\___ \\\\___ \\ \n";
 	cout << "     | |____| |  | | |____ ____) |___) |\n";
-	cout << "      \\_____|_|  |_|______|_____/_____/\n\n";
+	cout << "      \\____|_|  |_|______|_____/_____/\n\n";
 	cout << "    ======================================\n\n";
 }
 
@@ -135,7 +135,7 @@ void printSituation(Game& game)
 				space = " ";
 			}
 
-			cout << space << moves << " ..... " << game.rounds[moves - 1].whiteMove.c_str() << " | " << game.rounds[moves - 1].blackMove.c_str() << "\n";
+			cout << space << moves << " ..... " << game.rounds[(size_t)moves - 1].whiteMove.c_str() << " | " << game.rounds[(size_t)moves - 1].blackMove.c_str() << "\n";
 			moves--;
 		}
 

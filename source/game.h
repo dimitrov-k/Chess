@@ -30,22 +30,6 @@ public:
 
 	Chess::UnderAttack underAttack(Chess::Position currentPosition, int color, IntendedMove* intendedMove = nullptr);
 
-	void checkReachableHorizontal(Chess::Position currentPosition, int color, bool& bReachable);
-
-	void checkReachableVertical(Chess::Position currentPosition, int color, bool& bReachable);
-
-	void checkReachableDiagonal(Chess::Position currentPosition, int color, bool& bReachable);
-
-	void checkReachableLShaped(Chess::Position currentPosition, int color, bool& bReachable);
-
-	void checkUnderAttackHorizontal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
-
-	void checkUnderAttackVertical(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
-
-	void checkUnderAttackDiagonal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
-
-	void checkUnderAttackLShape(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
-
 	bool isReachable(Chess::Position currentPosition, int color);
 
 	bool isSquareOccupied(int row, int column);
@@ -127,5 +111,33 @@ private:
 
 	// Has the game finished already?
 	bool gameFinished;
+
+	void checkReachableHorizontal(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkReachableVertical(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkReachableDiagonal(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkReachableLShaped(Chess::Position currentPosition, int color, bool& bReachable);
+
+	void checkUnderAttackHorizontal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	void checkUnderAttackVertical(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	void checkUnderAttackDiagonal(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	void checkUnderAttackLShape(Chess::Position currentPosition, int color, IntendedMove* intendedMove, UnderAttack& attack);
+
+	void canBeBlockedHorizontal(Position starting, Position finishing, bool& bBlocked);
+
+	void canBeBlockedVertical(Position starting, Position finishing, bool& bBlocked);
+
+	void canBeBlockedDiagonal(Position starting, Position finishing, bool& bBlocked);
+
+	void isPathFreeHorizontal(Position starting, Position finishing, bool& bFree);
+
+	void isPathFreeVertical(Position starting, Position finishing, bool& bFree);
+
+	void isPathFreeDiagonal(Position starting, Position finishing, bool& bFree);
 };
 
