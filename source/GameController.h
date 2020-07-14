@@ -26,8 +26,13 @@ private:
 	void makeTheMove(Move* currentMove);
 	void newGame(void);
 	void undoMove(void);
+	bool isPickedPieceValid(Chess::Position& present, std::string& record);
+	bool isPickedHouseValid(Chess::Position& future, Chess::Position present, std::string& record);
+	bool isPromotionSuccessful(Move& currentMove, std::string& record);
+	void checkIfKingInCheck() const;
 	void movePiece(void);
 	void saveGame(void);
+	bool isLoadedMoveValid(Move& currentMove, std::string loadedMove);
 	void loadGame(void);
 };
 
